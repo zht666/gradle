@@ -28,7 +28,7 @@ if (java7Home) {
     tasks.withType(AbstractCompile) {
         options.with {
             fork = true
-            if (project.name != 'testingJunitPlatform') {
+            if (!(project in rootProject.findProperty('projectsRequiresJava8'))) {
                 forkOptions.javaHome = jvmForCompilation.javaHome
             }
         }

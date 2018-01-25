@@ -77,6 +77,7 @@ dependencies {
     testFixturesRuntime project(':dependencyManagement')
     testFixturesRuntime project(':pluginUse')
     testFixturesRuntime project(':runtimeApiInfo')
+    testFixturesRuntime project(':testingJunitPlatform')
 
     integTestImplementation project(":internalIntegTesting")
 
