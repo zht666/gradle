@@ -28,7 +28,9 @@ if (java7Home) {
     tasks.withType(AbstractCompile) {
         options.with {
             fork = true
-            forkOptions.javaHome = jvmForCompilation.javaHome
+            if (project.name != 'testingJunitPlatform') {
+                forkOptions.javaHome = jvmForCompilation.javaHome
+            }
         }
     }
 }

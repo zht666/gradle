@@ -26,6 +26,8 @@ dependencies {
     runtimeOnly libraries.jcl_to_slf4j
 
     testImplementation project(":internalTesting")
+
+    integTestRuntime project(':testingJunitPlatform')
 }
 
 useTestFixtures()
