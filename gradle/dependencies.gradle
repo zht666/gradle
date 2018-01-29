@@ -74,7 +74,7 @@ libraries += [
     jcip: "net.jcip:jcip-annotations:1.0",
     junit: 'junit:junit:4.12',
     junitPlatform: [
-        'org.junit.platform:junit-platform-launcher:1.0.2',
+        'org.junit.platform:junit-platform-launcher:1.0.3',
         'org.apiguardian:apiguardian-api:1.0.0'
     ],
     xmlunit: 'xmlunit:xmlunit:1.3',
