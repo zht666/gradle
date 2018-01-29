@@ -2,6 +2,40 @@
 
 Here are the new features introduced in this Gradle release.
 
+### JUnit Platform and JUnit Jupiter Engine (a.k.a. JUnit 5) support
+
+[JUnit 5](http://junit.org/junit5/docs/current/user-guide) is the latest version of well-known `JUnit` test framework. JUnit 5 is composed of several modules:
+
+    JUnit 5 = JUnit Platform + JUnit Jupiter + JUnit Vintage
+    
+Gradle now supports `JUnit Jupiter Engine` on top of `JUnit Platform`. To enable JUnit Platform support, you just need to add one line into your `build.gradle`:
+
+    test {
+        useJUnitPlatform()
+    }
+    
+And add `JUnit Jupiter` dependencies:
+
+    dependencies {
+        testCompile 'org.junit.jupiter:junit-jupiter-api:5.0.3', 'org.junit.jupiter:junit-jupiter-engine:5.0.3'
+    }      
+
+Put your first JUnit 5 test into `src/test/java/foo/bar`:
+
+    package foo.bar;
+    
+    import org.junit.jupiter.api.Test;
+    
+    public class JUnitJupiterTest {
+        @Test
+        public void ok() { 
+        }
+    }
+    
+Now you can run `gradle test` to see the results of your JUnit 5 tests! 
+
+You can find a sample of test with JUnit Jupiter at `samples/testing/junitplatform/jupiter` in the '-all' distribution of Gradle.
+
 ### Advanced POM support (preview)
 
 Gradle now supports [additional features for modules with POM metadata](https://github.com/gradle/gradle/blob/master/subprojects/dependency-management/preview-features.adoc). This includes support for _optional dependencies_, _BOM import_ and _compile/runtime scope separation_. 
