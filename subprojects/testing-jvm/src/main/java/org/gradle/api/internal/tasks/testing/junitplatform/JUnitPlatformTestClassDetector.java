@@ -16,31 +16,44 @@
 
 package org.gradle.api.internal.tasks.testing.junitplatform;
 
+import com.google.common.collect.ImmutableSet;
+import org.gradle.api.internal.tasks.testing.detection.TestClassVisitor;
 import org.gradle.api.internal.tasks.testing.detection.TestFrameworkDetector;
-import org.gradle.api.internal.tasks.testing.junit.JUnitTestClassDetector;
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 
-public class JUnitPlatformTestClassDetector extends JUnitTestClassDetector {
-    JUnitPlatformTestClassDetector(final TestFrameworkDetector detector) {
+import java.util.Set;
+
+public class JUnitPlatformTestClassDetector extends TestClassVisitor {
+    public static final Set<String> METHOD_ANNOTATIONS = ImmutableSet.of(
+        "Lorg/junit/jupiter/api/Test;",
+        "Lorg/junit/jupiter/api/ParameterizedTest;",
+        "Lorg/junit/jupiter/api/RepeatedTest;",
+        "Lorg/junit/jupiter/api/TestFactory;",
+        "Lorg/junit/jupiter/api/TestTemplate;",
+        "Lorg/junit/jupiter/api/extension/ExtendWith;"
+    );
+    public static final Set<String> CLASS_ANNOTATIONS = ImmutableSet.of("Lorg/junit/jupiter/api/extension/ExtendWith;");
+
+    JUnitPlatformTestClassDetector(TestFrameworkDetector detector) {
         super(detector);
     }
 
     @Override
-    public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        if (!isTest()) {
-            return new MethodVisitor(Opcodes.ASM6) {
-                @Override
-                public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-                    if (desc.startsWith("Lorg/junit/jupiter/api")) {
-                        setTest(true);
-                    }
-                    return null;
-                }
-            };
-        } else {
-            return null;
-        }
+    protected boolean ignoreMethodsInAbstractClass() {
+        return false;
+    }
+
+    @Override
+    protected boolean ignoreNonStaticInnerClass() {
+        return false;
+    }
+
+    @Override
+    protected Set<String> getTestMethodAnnotations() {
+        return METHOD_ANNOTATIONS;
+    }
+
+    @Override
+    protected Set<String> getTestClassAnnotations() {
+        return CLASS_ANNOTATIONS;
     }
 }

@@ -45,7 +45,7 @@ public class JUnitPlatformTestFramework implements TestFramework {
     public JUnitPlatformTestFramework(Test testTask, DefaultTestFilter filter) {
         this.filter = filter;
         options = new JUnitPlatformOptions();
-        detector = new JUnitPlatformDetector(new ClassFileExtractionManager(testTask.getTemporaryDirFactory()));
+        detector = new JUnitPlatformDetector(new ClassFileExtractionManager(testTask.getTemporaryDirFactory()), options.isLegacyJUnitEnabled());
     }
 
     @Override

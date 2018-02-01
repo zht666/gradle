@@ -281,13 +281,17 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 interface TestInterfaceDynamicTestsDemo {
-
     @TestFactory
     default Collection<DynamicTest> dynamicTestsFromCollection() {
         return Arrays.asList(
             DynamicTest.dynamicTest("1st dynamic test in test interface", () -> assertTrue(true)),
             DynamicTest.dynamicTest("2nd dynamic test in test interface", () -> assertEquals(4, 2 * 2))
         );
+    }
+    
+    @BeforeEach
+    default void beforeEach() {
+        System.out.println("Invoked!");
     }
 }
 '''
