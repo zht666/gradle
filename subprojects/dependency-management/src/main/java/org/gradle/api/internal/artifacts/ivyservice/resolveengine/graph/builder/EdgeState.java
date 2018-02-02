@@ -53,6 +53,7 @@ class EdgeState implements DependencyGraphEdge {
 
     private ComponentState targetModuleRevision;
     private ModuleVersionResolveException targetNodeSelectionFailure;
+    private ModuleExclusion cachedExclusions;
 
     EdgeState(NodeState from, DependencyState dependencyState, ModuleExclusion transitiveExclusions, ResolveState resolveState) {
         this.from = from;
@@ -159,12 +160,16 @@ class EdgeState implements DependencyGraphEdge {
 
     @Override
     public ModuleExclusion getExclusions() {
+        if (cachedExclusions != null) {
+            return cachedExclusions;
+        }
         List<ExcludeMetadata> excludes = dependencyMetadata.getExcludes();
         if (excludes.isEmpty()) {
             return transitiveExclusions;
         }
         ModuleExclusion edgeExclusions = resolveState.getModuleExclusions().excludeAny(ImmutableList.copyOf(excludes));
-        return resolveState.getModuleExclusions().intersect(edgeExclusions, transitiveExclusions);
+        cachedExclusions = resolveState.getModuleExclusions().intersect(edgeExclusions, transitiveExclusions);
+        return cachedExclusions;
     }
 
     @Override
