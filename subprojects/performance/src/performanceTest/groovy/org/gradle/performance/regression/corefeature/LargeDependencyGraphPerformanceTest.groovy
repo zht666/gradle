@@ -51,7 +51,7 @@ class LargeDependencyGraphPerformanceTest extends AbstractCrossVersionPerformanc
         startServer()
 
         given:
-        def baseline = "4.6-20180125002142+0000"
+        def baseline = "4.6-20180212002345+0000"
         runner.tasksToRun = ['resolveDependencies']
         runner.gradleOpts = ["-Xms256m", "-Xmx256m"]
         runner.targetVersions = [baseline]
