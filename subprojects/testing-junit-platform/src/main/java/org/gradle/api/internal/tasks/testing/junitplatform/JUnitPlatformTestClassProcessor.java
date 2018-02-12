@@ -153,7 +153,8 @@ public class JUnitPlatformTestClassProcessor extends AbstractJUnitTestClassProce
 
             if (source.get() instanceof MethodSource) {
                 MethodSource methodSource = (MethodSource) source.get();
-                return matcher.matchesTest(methodSource.getClassName(), methodSource.getMethodName());
+                return matcher.matchesTest(methodSource.getClassName(), methodSource.getMethodName())
+                    || matcher.matchesTest(methodSource.getClassName(), descriptor.getDisplayName());
             } else if (source.get() instanceof ClassSource) {
                 for (TestDescriptor child : descriptor.getChildren()) {
                     if (shouldRun(child)) {

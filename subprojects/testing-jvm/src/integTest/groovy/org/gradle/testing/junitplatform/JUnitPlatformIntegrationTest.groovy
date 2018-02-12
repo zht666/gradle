@@ -210,4 +210,51 @@ class JUnitPlatformIntegrationTest extends JUnitPlatformIntegrationSpec {
             .assertTestsSkipped('partialSkip 2/3')
             .assertTestPassed('partialSkip 3/3')
     }
+
+    @Unroll
+    def 'can filter tests by display name and method name'() {
+        given:
+        buildFile << """
+test {
+    filter {
+        includeTestsMatching 'FilterTest.${testName}*'
+    }
+}
+"""
+        file('src/test/java/FilterTest.java') << '''
+        import org.junit.jupiter.api.*;
+        import org.junit.jupiter.api.Assumptions;
+
+        public class FilterTest {
+            @DisplayName("displayName")
+            @Test
+            public void ok() {
+            }
+            @Test
+            public void ok(TestInfo testInfo) {
+            }
+            @RepeatedTest(3)
+            public void repeat(RepetitionInfo repetitionInfo) {
+            }
+            @Test
+            public void displayName() {
+            }
+        }
+'''
+        when:
+        succeeds('test')
+
+        then:
+        def result = new DefaultTestExecutionResult(testDirectory)
+        result.assertTestClassesExecuted('FilterTest')
+        result.testClass('FilterTest').assertTestCount(testCount, 0, 0)
+
+        where:
+        testName        | testCount
+        'ok'            | 2
+        'ok(TestInfo)'  | 1
+        'displayName'   | 2
+        'displayName()' | 1
+        'repeat'        | 3
+    }
 }
