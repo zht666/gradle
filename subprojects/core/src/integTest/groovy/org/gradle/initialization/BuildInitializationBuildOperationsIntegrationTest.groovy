@@ -60,7 +60,72 @@ class BuildInitializationBuildOperationsIntegrationTest extends AbstractIntegrat
         buildOperations.first('Configure build').id == loadProjectsBuildOperation.parentId
     }
 
-    @Ignore("https://github.com/gradle/gradle/issues/3873")
+//    def "can emit notifications for nested builds"() {
+//        when:
+//        file("buildSrc/build.gradle") << ""
+//        file("a/buildSrc/build.gradle") << ""
+//        file("a/build.gradle") << "task t"
+//        file("a/settings.gradle") << ""
+//        file("settings.gradle") << "includeBuild 'a'"
+//        buildScript """
+//           ${registerListenerWithDrainRecordings()}
+//            task t {
+//                dependsOn gradle.includedBuild("a").task(":t")
+//            }
+//        """
+//
+//        succeeds "t"
+//
+//        then:
+//        started(LoadBuildBuildOperationType.Details, [buildPath: ":"])
+//
+//        started(LoadBuildBuildOperationType.Details, [buildPath: ":"])
+//        started(LoadBuildBuildOperationType.Details, [buildPath: ":buildSrc"])
+//        started(LoadBuildBuildOperationType.Details, [buildPath: ":a"])
+//        started(LoadBuildBuildOperationType.Details, [buildPath: ":a:buildSrc"])
+//
+//        started(EvaluateSettingsBuildOperationType.Details, [settingsDir: file('buildSrc').absolutePath, settingsFile: file('buildSrc/settings.gradle').absolutePath, buildPath: ":buildSrc"])
+//        started(EvaluateSettingsBuildOperationType.Details, [settingsDir: file('a').absolutePath, settingsFile: file('a/settings.gradle').absolutePath, buildPath: ":a"])
+//        started(EvaluateSettingsBuildOperationType.Details, [settingsDir: file('a/buildSrc').absolutePath, settingsFile: file('a/buildSrc/settings.gradle').absolutePath, buildPath: ":a:buildSrc"])
+//        started(EvaluateSettingsBuildOperationType.Details, [settingsDir: file('.').absolutePath, settingsFile: file('settings.gradle').absolutePath, buildPath: ":"])
+//
+//        started(LoadProjectsBuildOperationType.Details, [buildPath: ":buildSrc"])
+//        started(LoadProjectsBuildOperationType.Details, [buildPath: ":a:buildSrc"])
+//        started(LoadProjectsBuildOperationType.Details, [buildPath: ":a"])
+//        started(LoadProjectsBuildOperationType.Details, [buildPath: ":"])
+//
+//        started(ConfigureProjectBuildOperationType.Details, [buildPath: ":buildSrc", projectPath: ":"])
+//        started(ConfigureProjectBuildOperationType.Details, [buildPath: ":a:buildSrc", projectPath: ":"])
+//        started(ConfigureProjectBuildOperationType.Details, [buildPath: ":a", projectPath: ":"])
+//        started(ConfigureProjectBuildOperationType.Details, [buildPath: ":", projectPath: ":"])
+//
+//        started(ConfigureProjectBuildOperationType.Details, [buildPath: ":buildSrc", projectPath: ":"])
+//        started(ConfigureProjectBuildOperationType.Details, [buildPath: ":a:buildSrc", projectPath: ":"])
+//        started(ConfigureProjectBuildOperationType.Details, [buildPath: ":a", projectPath: ":"])
+//        started(ConfigureProjectBuildOperationType.Details, [buildPath: ":", projectPath: ":"])
+//
+//        // evaluate hierarchies
+//        op(LoadBuildBuildOperationType.Details, [buildPath: ":"]).parentId == null // Run build build operation is not typed -> no id.
+//        op(LoadBuildBuildOperationType.Details, [buildPath: ":a"]).parentId == null // Run build build operation is not typed -> no id.
+//        op(LoadBuildBuildOperationType.Details, [buildPath: ":buildSrc"]).parentId == op(BuildBuildSrcBuildOperationType.Details, [buildPath: ':']).id
+//        op(LoadBuildBuildOperationType.Details, [buildPath: ":a:buildSrc"]).parentId == op(BuildBuildSrcBuildOperationType.Details, [buildPath: ':a']).id
+//
+//        op(EvaluateSettingsBuildOperationType.Details, [buildPath: ":"]).parentId == op(LoadBuildBuildOperationType.Details, [buildPath: ":"]).id
+//        op(EvaluateSettingsBuildOperationType.Details, [buildPath: ":a"]).parentId == op(LoadBuildBuildOperationType.Details, [buildPath: ":a"]).id
+//        op(EvaluateSettingsBuildOperationType.Details, [buildPath: ":buildSrc"]).parentId == op(LoadBuildBuildOperationType.Details, [buildPath: ":buildSrc"]).id
+//        op(EvaluateSettingsBuildOperationType.Details, [buildPath: ":a:buildSrc"]).parentId == op(LoadBuildBuildOperationType.Details, [buildPath: ":a:buildSrc"]).id
+//
+//        op(ConfigureBuildBuildOperationType.Details, [buildPath: ":"]).parentId == null // Run build build operation is not typed -> no id
+//        op(ConfigureBuildBuildOperationType.Details, [buildPath: ":a"]).parentId == null // Run build build operation is not typed -> no id
+//        op(ConfigureBuildBuildOperationType.Details, [buildPath: ":buildSrc"]).parentId == op(BuildBuildSrcBuildOperationType.Details, [buildPath: ':']).id
+//        op(ConfigureBuildBuildOperationType.Details, [buildPath: ":a:buildSrc"]).parentId == op(BuildBuildSrcBuildOperationType.Details, [buildPath: ':a']).id
+//
+//        op(LoadProjectsBuildOperationType.Details, [buildPath: ":"]).parentId == op(ConfigureBuildBuildOperationType.Details, [buildPath: ":"]).id
+//        op(LoadProjectsBuildOperationType.Details, [buildPath: ":a"]).parentId == op(ConfigureBuildBuildOperationType.Details, [buildPath: ":a"]).id
+//        op(LoadProjectsBuildOperationType.Details, [buildPath: ":buildSrc"]).parentId == op(ConfigureBuildBuildOperationType.Details, [buildPath: ":buildSrc"]).id
+//        op(LoadProjectsBuildOperationType.Details, [buildPath: ":a:buildSrc"]).parentId == op(ConfigureBuildBuildOperationType.Details, [buildPath: ":a:buildSrc"]).id
+//    }
+
     def "build operations for composite builds are fired and build path is exposed"() {
         buildFile << """
             apply plugin:'java'
