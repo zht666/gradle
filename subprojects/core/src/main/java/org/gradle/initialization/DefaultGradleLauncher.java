@@ -249,8 +249,7 @@ public class DefaultGradleLauncher implements GradleLauncher {
                     public String getBuildPath() {
                         return gradle.getIdentityPath().toString();
                     }
-                })
-                .parent(getGradle().getBuildOperation());
+                });
         }
     }
 
@@ -276,7 +275,7 @@ public class DefaultGradleLauncher implements GradleLauncher {
                     public String getBuildPath() {
                         return getGradle().getIdentityPath().toString();
                     }
-                }).parent(gradle.getBuildOperation());
+                });
         }
     }
 
@@ -321,7 +320,7 @@ public class DefaultGradleLauncher implements GradleLauncher {
                     public String getBuildPath() {
                         return getGradle().getIdentityPath().getPath();
                     }
-                }).parent(getGradle().getBuildOperation());
+                });
         }
     }
 
@@ -338,7 +337,7 @@ public class DefaultGradleLauncher implements GradleLauncher {
 
         @Override
         public BuildOperationDescriptor.Builder description() {
-            return BuildOperationDescriptor.displayName(contextualize("Run tasks")).parent(getGradle().getBuildOperation());
+            return BuildOperationDescriptor.displayName(contextualize("Run tasks"));
         }
     }
 

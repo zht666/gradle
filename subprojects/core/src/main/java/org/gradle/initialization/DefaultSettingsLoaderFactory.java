@@ -22,6 +22,7 @@ import org.gradle.api.internal.SettingsInternal;
 import org.gradle.composite.internal.IncludedBuildRegistry;
 import org.gradle.initialization.buildsrc.BuildSourceBuilder;
 import org.gradle.internal.composite.CompositeBuildSettingsLoader;
+import org.gradle.internal.operations.BuildOperationExecutor;
 
 public class DefaultSettingsLoaderFactory implements SettingsLoaderFactory {
     private final ISettingsFinder settingsFinder;
@@ -30,15 +31,17 @@ public class DefaultSettingsLoaderFactory implements SettingsLoaderFactory {
     private final NestedBuildFactory nestedBuildFactory;
     private final IncludedBuildRegistry includedBuildRegistry;
     private final StartParameter startParameter;
+    private final BuildOperationExecutor buildOperationExecutor;
 
     public DefaultSettingsLoaderFactory(ISettingsFinder settingsFinder, SettingsProcessor settingsProcessor, BuildSourceBuilder buildSourceBuilder,
-                                        NestedBuildFactory nestedBuildFactory, IncludedBuildRegistry includedBuildRegistry, StartParameter startParameter) {
+                                        NestedBuildFactory nestedBuildFactory, IncludedBuildRegistry includedBuildRegistry, StartParameter startParameter, BuildOperationExecutor buildOperationExecutor) {
         this.settingsFinder = settingsFinder;
         this.settingsProcessor = settingsProcessor;
         this.buildSourceBuilder = buildSourceBuilder;
         this.nestedBuildFactory = nestedBuildFactory;
         this.includedBuildRegistry = includedBuildRegistry;
         this.startParameter = startParameter;
+        this.buildOperationExecutor = buildOperationExecutor;
     }
 
     @Override
@@ -56,7 +59,7 @@ public class DefaultSettingsLoaderFactory implements SettingsLoaderFactory {
             defaultSettingsLoader(),
             nestedBuildFactory,
             includedBuildRegistry,
-            startParameter);
+            startParameter, buildOperationExecutor);
     }
 
     private SettingsLoader defaultSettingsLoader() {

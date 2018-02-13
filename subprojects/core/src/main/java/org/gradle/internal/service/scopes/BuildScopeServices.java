@@ -336,7 +336,7 @@ public class BuildScopeServices extends DefaultServiceRegistry {
                         cachingServiceLocator))),
             nestedBuildFactory,
             includedBuildRegistry,
-            startParameter);
+            startParameter, buildOperationExecutor);
     }
 
     protected InitScriptHandler createInitScriptHandler(ScriptPluginFactory scriptPluginFactory, ScriptHandlerFactory scriptHandlerFactory, BuildOperationExecutor buildOperationExecutor) {
