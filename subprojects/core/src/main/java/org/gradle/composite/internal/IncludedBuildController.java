@@ -15,6 +15,8 @@
  */
 package org.gradle.composite.internal;
 
+import org.gradle.internal.progress.BuildOperationState;
+
 public interface IncludedBuildController {
     void queueForExecution(String taskPath);
 
@@ -23,7 +25,7 @@ public interface IncludedBuildController {
     boolean isComplete(String taskPath);
 
 
-    void startTaskExecution();
+    void startTaskExecution(BuildOperationState currentOperation);
     void stopTaskExecution();
 
     boolean populateTaskGraph();

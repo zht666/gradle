@@ -22,6 +22,7 @@ import org.gradle.api.internal.initialization.ScriptClassPathInitializer;
 import org.gradle.api.internal.tasks.TaskReferenceResolver;
 import org.gradle.initialization.BuildIdentity;
 import org.gradle.internal.concurrent.ExecutorFactory;
+import org.gradle.internal.operations.BuildOperationExecutor;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.internal.service.ServiceRegistration;
 import org.gradle.internal.service.ServiceRegistry;
@@ -54,8 +55,8 @@ public class CompositeBuildServices extends AbstractPluginServiceRegistry {
             return new DefaultBuildableCompositeBuildContext(moduleIdentifierFactory, new IncludedBuildDependencyMetadataBuilder());
         }
 
-        public IncludedBuildControllers createIncludedBuildControllers(ExecutorFactory executorFactory, IncludedBuildRegistry includedBuildRegistry) {
-            return new DefaultIncludedBuildControllers(executorFactory, includedBuildRegistry);
+        public IncludedBuildControllers createIncludedBuildControllers(ExecutorFactory executorFactory, IncludedBuildRegistry includedBuildRegistry, BuildOperationExecutor buildOperationExecutor) {
+            return new DefaultIncludedBuildControllers(executorFactory, includedBuildRegistry, buildOperationExecutor);
         }
 
         public IncludedBuildTaskGraph createIncludedBuildTaskGraph(IncludedBuildControllers controllers) {

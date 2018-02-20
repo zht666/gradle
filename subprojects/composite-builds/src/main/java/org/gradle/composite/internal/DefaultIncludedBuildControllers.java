@@ -23,18 +23,25 @@ import org.gradle.internal.concurrent.CompositeStoppable;
 import org.gradle.internal.concurrent.ExecutorFactory;
 import org.gradle.internal.concurrent.ManagedExecutor;
 import org.gradle.internal.concurrent.Stoppable;
+import org.gradle.internal.operations.BuildOperationContext;
+import org.gradle.internal.operations.BuildOperationExecutor;
+import org.gradle.internal.operations.RunnableBuildOperation;
+import org.gradle.internal.progress.BuildOperationDescriptor;
+import org.gradle.internal.progress.BuildOperationState;
 
 import java.util.Map;
 
 class DefaultIncludedBuildControllers implements Stoppable, IncludedBuildControllers {
     private final Map<BuildIdentifier, IncludedBuildController> buildControllers = Maps.newHashMap();
     private final ManagedExecutor executorService;
+    private final BuildOperationExecutor buildOperationExecutor;
     private final IncludedBuildRegistry includedBuildRegistry;
     private boolean taskExecutionStarted;
 
-    DefaultIncludedBuildControllers(ExecutorFactory executorFactory, IncludedBuildRegistry includedBuildRegistry) {
+    DefaultIncludedBuildControllers(ExecutorFactory executorFactory, IncludedBuildRegistry includedBuildRegistry, BuildOperationExecutor buildOperationExecutor) {
         this.includedBuildRegistry = includedBuildRegistry;
         this.executorService = executorFactory.create("included builds");
+        this.buildOperationExecutor = buildOperationExecutor;
     }
 
     public IncludedBuildController getBuildController(BuildIdentifier buildId) {
@@ -44,13 +51,14 @@ class DefaultIncludedBuildControllers implements Stoppable, IncludedBuildControl
         }
 
         IncludedBuild build = includedBuildRegistry.getBuild(buildId);
+
         DefaultIncludedBuildController newBuildController = new DefaultIncludedBuildController(build);
         buildControllers.put(buildId, newBuildController);
         executorService.submit(newBuildController);
 
         // Required for build controllers created after initial start
         if (taskExecutionStarted) {
-            newBuildController.startTaskExecution();
+            newBuildController.startTaskExecution(buildOperationExecutor.getCurrentOperation());
         }
 
         return newBuildController;
@@ -59,9 +67,22 @@ class DefaultIncludedBuildControllers implements Stoppable, IncludedBuildControl
     @Override
     public void startTaskExecution() {
         this.taskExecutionStarted = true;
-        populateTaskGraphs();
+        final BuildOperationState currentOperation = buildOperationExecutor.getCurrentOperation();
+
+        buildOperationExecutor.run(new RunnableBuildOperation() {
+            @Override
+            public void run(BuildOperationContext context) {
+                populateTaskGraphs();
+            }
+
+            @Override
+            public BuildOperationDescriptor.Builder description() {
+                return BuildOperationDescriptor.displayName("Calculate task graphs of included builds").parent(currentOperation);
+            }
+        });
+
         for (IncludedBuildController buildController : buildControllers.values()) {
-            buildController.startTaskExecution();
+            buildController.startTaskExecution(currentOperation);
         }
     }
 

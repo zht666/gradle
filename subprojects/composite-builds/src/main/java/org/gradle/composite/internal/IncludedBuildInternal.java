@@ -24,6 +24,7 @@ import org.gradle.api.initialization.ConfigurableIncludedBuild;
 import org.gradle.api.internal.GradleInternal;
 import org.gradle.api.internal.SettingsInternal;
 import org.gradle.internal.Pair;
+import org.gradle.internal.progress.BuildOperationState;
 
 import java.util.List;
 import java.util.Set;
@@ -36,5 +37,5 @@ public interface IncludedBuildInternal extends ConfigurableIncludedBuild {
     GradleInternal getConfiguredBuild();
     void finishBuild();
     void addTasks(Iterable<String> tasks);
-    void execute(Iterable<String> tasks, Object listener);
+    void execute(Iterable<String> tasks, Object listener, BuildOperationState currentOperation);
 }

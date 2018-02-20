@@ -143,7 +143,7 @@ class DefaultGradleLauncherSpec extends Specification {
         expectTasksRun()
         expectBuildListenerCallbacks()
         DefaultGradleLauncher gradleLauncher = launcher()
-        GradleInternal result = gradleLauncher.executeTasks()
+        GradleInternal result = gradleLauncher.executeTasks(null)
 
         then:
         result == gradleMock
@@ -161,7 +161,7 @@ class DefaultGradleLauncherSpec extends Specification {
         expectTasksRun()
         expectBuildListenerCallbacks()
         DefaultGradleLauncher gradleLauncher = launcher()
-        GradleInternal result = gradleLauncher.executeTasks()
+        GradleInternal result = gradleLauncher.executeTasks(null)
 
         then:
         result == gradleMock
@@ -217,7 +217,7 @@ class DefaultGradleLauncherSpec extends Specification {
 
         then:
         DefaultGradleLauncher gradleLauncher = launcher()
-        gradleLauncher.executeTasks()
+        gradleLauncher.executeTasks(null)
     }
 
     void testNotifiesListenerOnBuildListenerFailure() {
@@ -228,7 +228,7 @@ class DefaultGradleLauncherSpec extends Specification {
 
         when:
         DefaultGradleLauncher gradleLauncher = launcher()
-        gradleLauncher.executeTasks()
+        gradleLauncher.executeTasks(null)
 
         then:
         def t = thrown ReportedException
@@ -247,7 +247,7 @@ class DefaultGradleLauncherSpec extends Specification {
 
         when:
         DefaultGradleLauncher gradleLauncher = launcher()
-        gradleLauncher.executeTasks()
+        gradleLauncher.executeTasks(null)
 
         then:
         def t = thrown ReportedException
@@ -270,7 +270,7 @@ class DefaultGradleLauncherSpec extends Specification {
 
         when:
         DefaultGradleLauncher gradleLauncher = launcher()
-        gradleLauncher.executeTasks()
+        gradleLauncher.executeTasks(null)
 
         then:
         def t = thrown ReportedException

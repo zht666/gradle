@@ -36,6 +36,7 @@ import org.gradle.internal.operations.BuildOperationContext;
 import org.gradle.internal.operations.BuildOperationExecutor;
 import org.gradle.internal.operations.RunnableBuildOperation;
 import org.gradle.internal.progress.BuildOperationDescriptor;
+import org.gradle.internal.progress.BuildOperationState;
 import org.gradle.internal.service.scopes.BuildScopeServices;
 import org.gradle.internal.taskgraph.CalculateTaskGraphBuildOperationType;
 import org.gradle.util.Path;
@@ -101,18 +102,18 @@ public class DefaultGradleLauncher implements GradleLauncher {
 
     @Override
     public SettingsInternal getLoadedSettings() {
-        doBuildStages(Stage.Load);
+        doBuildStages(Stage.Load, null);
         return settings;
     }
 
     @Override
     public GradleInternal getConfiguredBuild() {
-        doBuildStages(Stage.Configure);
+        doBuildStages(Stage.Configure, null);
         return gradle;
     }
 
-    public GradleInternal executeTasks() {
-        doBuildStages(Stage.Build);
+    public GradleInternal executeTasks(BuildOperationState currentOperation) {
+        doBuildStages(Stage.Build, currentOperation);
         return gradle;
     }
 
@@ -123,7 +124,7 @@ public class DefaultGradleLauncher implements GradleLauncher {
         }
     }
 
-    private void doBuildStages(Stage upTo) {
+    private void doBuildStages(Stage upTo, BuildOperationState currentOperation) {
         try {
             loadSettings();
             if (upTo == Stage.Load) {
@@ -137,7 +138,7 @@ public class DefaultGradleLauncher implements GradleLauncher {
             if (upTo == Stage.TaskGraph) {
                 return;
             }
-            runTasks();
+            runTasks(currentOperation);
             finishBuild();
         } catch (Throwable t) {
             Throwable failure = exceptionAnalyser.transform(t);
@@ -199,15 +200,15 @@ public class DefaultGradleLauncher implements GradleLauncher {
         // Force back to configure so that task graph will get reevaluated
         stage = Stage.Configure;
 
-        doBuildStages(Stage.TaskGraph);
+        doBuildStages(Stage.TaskGraph, null);
     }
 
-    private void runTasks() {
+    private void runTasks(BuildOperationState currentOperation) {
         if (stage != Stage.TaskGraph) {
             throw new IllegalStateException("Cannot execute tasks: current stage = " + stage);
         }
 
-        buildOperationExecutor.run(new ExecuteTasks());
+        buildOperationExecutor.run(new ExecuteTasks(currentOperation));
 
         stage = Stage.Build;
     }
@@ -325,6 +326,13 @@ public class DefaultGradleLauncher implements GradleLauncher {
     }
 
     private class ExecuteTasks implements RunnableBuildOperation {
+
+        private final BuildOperationState currentOperation;
+
+        private ExecuteTasks(BuildOperationState currentOperation) {
+            this.currentOperation = currentOperation;
+        }
+
         @Override
         public void run(BuildOperationContext context) {
             if (!isNestedBuild()) {
@@ -337,7 +345,7 @@ public class DefaultGradleLauncher implements GradleLauncher {
 
         @Override
         public BuildOperationDescriptor.Builder description() {
-            return BuildOperationDescriptor.displayName(contextualize("Run tasks"));
+            return BuildOperationDescriptor.displayName(contextualize("Run tasks")).parent(currentOperation);
         }
     }
 

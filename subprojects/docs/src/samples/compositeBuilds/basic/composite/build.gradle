@@ -1,6 +1,15 @@
 apply plugin: 'idea'
+apply plugin: 'java'
 
 defaultTasks 'run'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.sample:my-app:1.0"
+}
 
 // START SNIPPET run
 task run {

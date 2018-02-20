@@ -116,7 +116,7 @@ class InProcessBuildActionExecuterTest extends Specification {
 
         and:
         1 * factory.newInstance(startParameter, buildRequestContext, sessionServices) >> launcher
-        1 * launcher.executeTasks() >> gradle
+        1 * launcher.executeTasks(null) >> gradle
         1 * actionRunner.run(action, !null) >> { BuildAction a, BuildController controller ->
             assert controller.run() == gradle
             controller.result = '<result>'
@@ -157,7 +157,7 @@ class InProcessBuildActionExecuterTest extends Specification {
 
         and:
         1 * factory.newInstance(startParameter, buildRequestContext, sessionServices) >> launcher
-        1 * launcher.executeTasks() >> gradle
+        1 * launcher.executeTasks(null) >> gradle
         1 * launcher.stop()
     }
 
@@ -190,7 +190,7 @@ class InProcessBuildActionExecuterTest extends Specification {
 
         and:
         1 * factory.newInstance(startParameter, buildRequestContext, sessionServices) >> launcher
-        1 * launcher.executeTasks() >> { throw failure }
+        1 * launcher.executeTasks(null) >> { throw failure }
         1 * actionRunner.run(action, !null) >> { BuildAction action, BuildController controller ->
             controller.run()
         }

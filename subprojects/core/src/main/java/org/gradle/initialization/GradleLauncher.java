@@ -18,6 +18,7 @@ package org.gradle.initialization;
 import org.gradle.api.internal.GradleInternal;
 import org.gradle.api.internal.SettingsInternal;
 import org.gradle.internal.concurrent.Stoppable;
+import org.gradle.internal.progress.BuildOperationState;
 
 /**
  * This was the old Gradle embedding API (it used to be in the public `org.gradle` package). It is now internal and is due to be merged into {@link org.gradle.internal.invocation.BuildController}.
@@ -52,8 +53,9 @@ public interface GradleLauncher extends Stoppable {
      *
      * @throws ReportedException On build failure. The failure will have been logged.
      * @return The configured Gradle build instance.
+     * @param currentOperation
      */
-    GradleInternal executeTasks();
+    GradleInternal executeTasks(BuildOperationState currentOperation);
 
     /**
      * Stops task execution threads and calls the `buildFinished` listener event.

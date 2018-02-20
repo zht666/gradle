@@ -36,6 +36,7 @@ import org.gradle.initialization.NestedBuildFactory;
 import org.gradle.internal.Pair;
 import org.gradle.internal.component.local.model.DefaultLocalComponentMetadata;
 import org.gradle.internal.concurrent.Stoppable;
+import org.gradle.internal.progress.BuildOperationState;
 import org.gradle.internal.work.WorkerLeaseRegistry;
 import org.gradle.internal.work.WorkerLeaseService;
 import org.slf4j.Logger;
@@ -153,7 +154,7 @@ public class DefaultIncludedBuild implements IncludedBuildInternal, Stoppable {
     }
 
     @Override
-    public synchronized void execute(final Iterable<String> tasks, final Object listener) {
+    public synchronized void execute(final Iterable<String> tasks, final Object listener, final BuildOperationState currentOperation) {
         final GradleLauncher launcher = getGradleLauncher();
         launcher.addListener(listener);
         launcher.scheduleTasks(tasks);
@@ -162,7 +163,7 @@ public class DefaultIncludedBuild implements IncludedBuildInternal, Stoppable {
             workerLeaseService.withSharedLease(parentLease, new Runnable() {
                 @Override
                 public void run() {
-                    launcher.executeTasks();
+                    launcher.executeTasks(currentOperation);
                 }
             });
         } finally {
