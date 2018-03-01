@@ -29,7 +29,6 @@ import org.gradle.api.internal.tasks.properties.PropertyValue;
 import org.gradle.api.internal.tasks.properties.PropertyValueVisitor;
 import org.gradle.api.internal.tasks.properties.PropertyVisitor;
 import org.gradle.api.internal.tasks.properties.TypeMetadata;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Optional;
 import org.gradle.internal.Factory;
 import org.gradle.internal.UncheckedException;
@@ -77,7 +76,7 @@ public abstract class AbstractNestedRuntimeBeanNode extends RuntimeBeanNode<Obje
             @Override
             @Nullable
             public Object get() {
-                Object value = DeprecationLogger.whileDisabled(new Factory<Object>() {
+                return DeprecationLogger.whileDisabled(new Factory<Object>() {
                     public Object create() {
                         try {
                             return method.invoke(bean);
@@ -88,7 +87,6 @@ public abstract class AbstractNestedRuntimeBeanNode extends RuntimeBeanNode<Obje
                         }
                     }
                 });
-                return value instanceof Provider ? ((Provider<?>) value).getOrNull() : value;
             }
         });
 
