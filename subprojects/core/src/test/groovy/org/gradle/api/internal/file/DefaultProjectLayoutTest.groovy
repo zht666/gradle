@@ -43,7 +43,7 @@ class DefaultProjectLayoutTest extends Specification {
 
     def "can resolve directory relative to project directory"() {
         def pathProvider = Stub(Provider)
-        _ * pathProvider.get() >>> ["a", "b"]
+        _ * pathProvider.getOrNull() >>> ["a", "b"]
         _ * pathProvider.present >> true
 
         expect:
@@ -123,7 +123,7 @@ class DefaultProjectLayoutTest extends Specification {
 
     def "can create directory var"() {
         def pathProvider = Stub(Provider)
-        _ * pathProvider.get() >> { "../other-dir" }
+        _ * pathProvider.getOrNull() >> { "../other-dir" }
         _ * pathProvider.present >> true
         def otherDir = tmpDir.file("other-dir")
 

@@ -129,10 +129,7 @@ public class DefaultFileCollectionResolveContext implements ResolvableFileCollec
                 }
             } else if (element instanceof Provider) {
                 Provider provider = (Provider) element;
-                Object providerResult = provider.getOrNull();
-                if (providerResult != null) {
-                    queue.add(0, providerResult);
-                }
+                queue.add(0, provider.get());
             } else if (element instanceof Path) {
                 queue.add(0, ((Path) element).toFile());
             } else if (element instanceof Iterable) {

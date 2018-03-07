@@ -363,10 +363,13 @@ class ValueSnapshotterTest extends Specification {
 
     def "creates snapshot for provider type"() {
         def value = Stub(Provider)
+        value.getOrNull() >> "123"
         value.get() >> "123"
         def value2 = Stub(Provider)
+        value2.getOrNull() >> "123"
         value2.get() >> "123"
         def value3 = Stub(Provider)
+        value3.getOrNull() >> "12"
         value3.get() >> "12"
 
         expect:
@@ -688,11 +691,11 @@ class ValueSnapshotterTest extends Specification {
 
     def "creates snapshot for provider type from candidate"() {
         def value = Stub(Provider)
-        value.get() >> "123"
+        value.getOrNull() >> "123"
         def value2 = Stub(Provider)
-        value2.get() >> "123"
+        value2.getOrNull() >> "123"
         def value3 = Stub(Provider)
-        value3.get() >> "12"
+        value3.getOrNull() >> "12"
 
         expect:
         def snapshot = snapshotter.snapshot(value)

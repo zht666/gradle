@@ -131,9 +131,8 @@ public class DefaultTaskDependency extends AbstractTaskDependency {
             } else if (dependency instanceof ProviderInternal) {
                 ProviderInternal providerInternal = (ProviderInternal) dependency;
                 if (providerInternal.getType() == null || providerInternal.getType().equals(Provider.class)) {
-                    Object result = providerInternal.getOrNull();
-                    if (result != null) {
-                        queue.addFirst(result);
+                    if (providerInternal.isPresent()) {
+                        queue.addFirst(providerInternal.get());
                     }
                     continue;
                 }

@@ -28,7 +28,7 @@ import java.util.concurrent.Callable
 
 import static org.gradle.util.WrapUtil.toSet
 
-public class DefaultTaskDependencyTest extends Specification {
+class DefaultTaskDependencyTest extends Specification {
     private final TaskResolver resolver = Mock(TaskResolver.class)
     private final DefaultTaskDependency dependency = new DefaultTaskDependency(resolver)
     private Task task
@@ -167,6 +167,7 @@ public class DefaultTaskDependencyTest extends Specification {
         def nested = Mock(TestProvider)
 
         given:
+        1 * dep.isPresent() >> true
         1 * dep.get() >> nested
         1 * nested.visitDependencies(_) >> { args -> args[0].add(otherTask) }
 
@@ -181,6 +182,7 @@ public class DefaultTaskDependencyTest extends Specification {
         def dep = Mock(ProviderInternal)
 
         given:
+        1 * dep.isPresent() >> true
         1 * dep.get() >> 123
         dependency.add(dep)
 
