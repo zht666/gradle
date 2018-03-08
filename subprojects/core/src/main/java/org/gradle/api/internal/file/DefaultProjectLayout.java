@@ -29,6 +29,8 @@ import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.file.RegularFileVar;
+import org.gradle.api.internal.file.collections.DirectoryFileTree;
+import org.gradle.api.internal.file.collections.FileTreeAdapter;
 import org.gradle.api.internal.file.collections.MinimalFileSet;
 import org.gradle.api.internal.provider.AbstractCombiningProvider;
 import org.gradle.api.internal.provider.AbstractMappingProvider;
@@ -40,6 +42,7 @@ import org.gradle.api.internal.tasks.TaskDependencyResolveContext;
 import org.gradle.api.internal.tasks.TaskResolver;
 import org.gradle.api.provider.Provider;
 import org.gradle.internal.file.PathToFileResolver;
+import org.gradle.internal.nativeintegration.services.FileSystems;
 import org.gradle.util.DeprecationLogger;
 
 import javax.annotation.Nullable;
@@ -190,7 +193,7 @@ public class DefaultProjectLayout implements ProjectLayout, TaskFileVarFactory {
 
         @Override
         public FileTree getAsFileTree() {
-            return fileResolver.resolveFilesAsTree(this);
+            return new FileTreeAdapter(new DirectoryFileTree(this, fileResolver.getPatternSetFactory().create(), FileSystems.getDefault()));
         }
 
         @Override
@@ -363,7 +366,7 @@ public class DefaultProjectLayout implements ProjectLayout, TaskFileVarFactory {
 
         @Override
         public FileTree getAsFileTree() {
-            return resolver.resolveFilesAsTree(this);
+            return new FileTreeAdapter(new DirectoryFileTree(this, resolver.getPatternSetFactory().create(), FileSystems.getDefault()));
         }
 
         @Override
