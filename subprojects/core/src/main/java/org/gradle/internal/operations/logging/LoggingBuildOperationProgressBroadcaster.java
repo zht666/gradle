@@ -18,10 +18,10 @@ package org.gradle.internal.operations.logging;
 
 import org.gradle.internal.concurrent.Stoppable;
 import org.gradle.internal.logging.LoggingManagerInternal;
-import org.gradle.internal.logging.events.CategorisedOutputEvent;
 import org.gradle.internal.logging.events.LogEvent;
 import org.gradle.internal.logging.events.OutputEvent;
 import org.gradle.internal.logging.events.OutputEventListener;
+import org.gradle.internal.logging.events.ProgressCompleteEvent;
 import org.gradle.internal.logging.events.ProgressStartEvent;
 import org.gradle.internal.logging.events.RenderableOutputEvent;
 import org.gradle.internal.logging.events.StyledTextOutputEvent;
@@ -76,7 +76,7 @@ public class LoggingBuildOperationProgressBroadcaster implements Stoppable, Outp
                 return;
             }
             if (renderableOutputEvent instanceof StyledTextOutputEvent || renderableOutputEvent instanceof LogEvent) {
-                emit(renderableOutputEvent, renderableOutputEvent.getBuildOperationId());
+                emit(renderableOutputEvent,renderableOutputEvent.getTimestamp(), renderableOutputEvent.getBuildOperationId());
             }
         } else if (event instanceof ProgressStartEvent) {
             ProgressStartEvent progressStartEvent = (ProgressStartEvent) event;
@@ -86,14 +86,17 @@ public class LoggingBuildOperationProgressBroadcaster implements Stoppable, Outp
             if (progressStartEvent.getLoggingHeader() == null) {
                 return; // If the event has no logging header, it doesn't manifest as console output.
             }
-            emit(progressStartEvent, progressStartEvent.getBuildOperationId());
+            emit(progressStartEvent, progressStartEvent.getTimestamp(), progressStartEvent.getBuildOperationId());
+        } else if (event instanceof ProgressCompleteEvent){
+            ProgressCompleteEvent progressCompleteEvent = (ProgressCompleteEvent) event;
+            emit(progressCompleteEvent, progressCompleteEvent.getTimestamp(), null);
         }
     }
 
-    private void emit(CategorisedOutputEvent event, OperationIdentifier buildOperationId) {
+    private void emit(OutputEvent event, long timestamp, OperationIdentifier buildOperationId) {
         buildOperationListener.progress(
             buildOperationId,
-            new OperationProgressEvent(event.getTimestamp(), event)
+            new OperationProgressEvent(timestamp, event)
         );
     }
 

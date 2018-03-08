@@ -17,9 +17,12 @@
 package org.gradle.internal.logging.events;
 
 import org.gradle.api.logging.LogLevel;
+import org.gradle.internal.logging.events.operations.ProgressCompleteBuildOperationProgressDetails;
 import org.gradle.internal.operations.OperationIdentifier;
+import org.gradle.internal.scan.UsedByScanPlugin;
 
-public class ProgressCompleteEvent extends OutputEvent {
+@UsedByScanPlugin
+public class ProgressCompleteEvent extends OutputEvent implements ProgressCompleteBuildOperationProgressDetails {
     private final long timestamp;
     private final String status;
     private OperationIdentifier progressOperationId;
@@ -56,5 +59,10 @@ public class ProgressCompleteEvent extends OutputEvent {
 
     public long getTimestamp() {
         return timestamp;
+    }
+
+    @Override
+    public long getId() {
+        return getProgressOperationId().getId();
     }
 }

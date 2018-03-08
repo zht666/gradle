@@ -88,6 +88,11 @@ public class ProgressStartEvent extends CategorisedOutputEvent implements Progre
         return loggingHeader;
     }
 
+    @Override
+    public long getId() {
+        return progressOperationId.getId();
+    }
+
     public String getStatus() {
         return status;
     }
