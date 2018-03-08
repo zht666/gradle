@@ -21,6 +21,8 @@ import org.gradle.api.file.FileVisitor;
 import org.gradle.api.internal.file.AbstractFileTree;
 import org.gradle.api.internal.file.FileCollectionVisitor;
 import org.gradle.api.internal.file.FileSystemSubset;
+import org.gradle.api.internal.tasks.TaskDependencyContainer;
+import org.gradle.api.internal.tasks.TaskDependencyResolveContext;
 import org.gradle.api.tasks.TaskDependency;
 import org.gradle.api.tasks.util.PatternFilterable;
 import org.gradle.api.tasks.util.PatternSet;
@@ -33,7 +35,7 @@ import java.util.Collections;
 /**
  * Adapts a {@link MinimalFileTree} into a full {@link FileTree} implementation.
  */
-public class FileTreeAdapter extends AbstractFileTree implements FileCollectionContainer {
+public class FileTreeAdapter extends AbstractFileTree implements FileCollectionContainer, TaskDependencyContainer {
     private final MinimalFileTree tree;
 
     public FileTreeAdapter(MinimalFileTree tree) {
@@ -129,5 +131,12 @@ public class FileTreeAdapter extends AbstractFileTree implements FileCollectionC
 
     public void visitTreeOrBackingFile(FileVisitor visitor) {
         tree.visitTreeOrBackingFile(visitor);
+    }
+
+    @Override
+    public void visitDependencies(TaskDependencyResolveContext context) {
+        if (tree instanceof TaskDependencyContainer) {
+            ((TaskDependencyContainer) tree).visitDependencies(context);
+        }
     }
 }

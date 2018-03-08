@@ -39,7 +39,7 @@ abstract class AbstractNativeDependenciesIntegrationTest extends AbstractInstall
         """
 
         when:
-        run(assembleDevBinaryTask)
+        run(assembleDevBinaryTask, '--info')
 
         then:
         result.assertTasksExecuted(libDebugTasks, assembleDevBinaryTasks, assembleDevBinaryTask)

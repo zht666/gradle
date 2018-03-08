@@ -26,6 +26,8 @@ import org.gradle.api.file.RelativePath;
 import org.gradle.api.file.ReproducibleFileVisitor;
 import org.gradle.api.internal.file.DefaultFileVisitDetails;
 import org.gradle.api.internal.file.FileSystemSubset;
+import org.gradle.api.internal.tasks.TaskDependencyContainer;
+import org.gradle.api.internal.tasks.TaskDependencyResolveContext;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Provider;
@@ -50,7 +52,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * A file or directory will only be visited if it matches all includes and no
  * excludes.
  */
-public class DirectoryFileTree implements MinimalFileTree, PatternFilterableFileTree, RandomAccessFileCollection, LocalFileTree, DirectoryTree {
+public class DirectoryFileTree implements MinimalFileTree, PatternFilterableFileTree, RandomAccessFileCollection, LocalFileTree, DirectoryTree, TaskDependencyContainer {
     private static final Logger LOGGER = Logging.getLogger(DirectoryFileTree.class);
     private static final Factory<DirectoryWalker> DEFAULT_DIRECTORY_WALKER_FACTORY = new DefaultDirectoryWalkerFactory();
     private static final DirectoryWalker REPRODUCIBLE_DIRECTORY_WALKER = new ReproducibleDirectoryWalker(FileSystems.getDefault());
@@ -60,6 +62,7 @@ public class DirectoryFileTree implements MinimalFileTree, PatternFilterableFile
     private final FileSystem fileSystem;
     private final Factory<DirectoryWalker> directoryWalkerFactory;
     private final FileSystemLocation dir;
+    private final TaskDependencyContainer dependencies;
 
     public DirectoryFileTree(final File dir, PatternSet patternSet, FileSystem fileSystem) {
         this(new FileSystemLocation() {
@@ -67,7 +70,7 @@ public class DirectoryFileTree implements MinimalFileTree, PatternFilterableFile
             public File getAsFile() {
                 return dir;
             }
-        }, patternSet, DEFAULT_DIRECTORY_WALKER_FACTORY, fileSystem, false);
+        }, patternSet, DEFAULT_DIRECTORY_WALKER_FACTORY, fileSystem, false, null);
     }
 
     public DirectoryFileTree(final Provider<Directory> dir, PatternSet patternSet, FileSystem fileSystem) {
@@ -76,19 +79,20 @@ public class DirectoryFileTree implements MinimalFileTree, PatternFilterableFile
             public File getAsFile() {
                 return dir.get().getAsFile();
             }
-        }, patternSet, DEFAULT_DIRECTORY_WALKER_FACTORY, fileSystem, false);
+        }, patternSet, DEFAULT_DIRECTORY_WALKER_FACTORY, fileSystem, false, dir instanceof TaskDependencyContainer ? (TaskDependencyContainer) dir : null);
     }
 
     public DirectoryFileTree(final Directory dir, PatternSet patternSet, FileSystem fileSystem) {
-        this(dir, patternSet, DEFAULT_DIRECTORY_WALKER_FACTORY, fileSystem, false);
+        this(dir, patternSet, DEFAULT_DIRECTORY_WALKER_FACTORY, fileSystem, false, null);
     }
 
-    DirectoryFileTree(FileSystemLocation dir, PatternSet patternSet, Factory<DirectoryWalker> directoryWalkerFactory, FileSystem fileSystem, boolean postfix) {
+    DirectoryFileTree(FileSystemLocation dir, PatternSet patternSet, Factory<DirectoryWalker> directoryWalkerFactory, FileSystem fileSystem, boolean postfix, TaskDependencyContainer dependencies) {
         this.patternSet = patternSet;
         this.dir = dir;
         this.directoryWalkerFactory = directoryWalkerFactory;
         this.fileSystem = fileSystem;
         this.postfix = postfix;
+        this.dependencies = dependencies;
     }
 
     @Override
@@ -122,7 +126,7 @@ public class DirectoryFileTree implements MinimalFileTree, PatternFilterableFile
     public DirectoryFileTree filter(PatternFilterable patterns) {
         PatternSet patternSet = this.patternSet.intersect();
         patternSet.copyFrom(patterns);
-        return new DirectoryFileTree(dir, patternSet, directoryWalkerFactory, fileSystem, postfix);
+        return new DirectoryFileTree(dir, patternSet, directoryWalkerFactory, fileSystem, postfix, dependencies);
     }
 
     @Override
@@ -195,11 +199,17 @@ public class DirectoryFileTree implements MinimalFileTree, PatternFilterableFile
         if (postfix) {
             return this;
         }
-        return new DirectoryFileTree(dir, patternSet, directoryWalkerFactory, fileSystem, true);
+        return new DirectoryFileTree(dir, patternSet, directoryWalkerFactory, fileSystem, true, dependencies);
     }
 
     public PatternSet getPatternSet() {
         return patternSet;
     }
 
+    @Override
+    public void visitDependencies(TaskDependencyResolveContext context) {
+        if (dependencies != null) {
+            dependencies.visitDependencies(context);
+        }
+    }
 }
