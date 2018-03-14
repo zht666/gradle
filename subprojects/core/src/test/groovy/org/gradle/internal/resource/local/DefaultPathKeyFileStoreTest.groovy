@@ -27,7 +27,7 @@ import spock.lang.Specification
 class DefaultPathKeyFileStoreTest extends Specification {
     @Rule TestNameTestDirectoryProvider dir = new TestNameTestDirectoryProvider()
     TestFile fsBase
-    PathKeyFileStore store
+    DefaultPathKeyFileStore store
 
     def pathCounter = 0
 
@@ -147,10 +147,10 @@ class DefaultPathKeyFileStoreTest extends Specification {
     def "get cleans up filestore"() {
         when:
         createFile("abc", "fs/a").exists()
-        createFile("lock", "fs/a.fslck").exists()
+        store.marker.startWrite("a")
+
         then:
         store.get("a") == null
-        store.get("a.fslock") == null
     }
 
     def "can overwrite stale files "() {
@@ -210,7 +210,7 @@ class DefaultPathKeyFileStoreTest extends Specification {
         store.move("a/a/a", createFile("a"))
         store.move("a/b/b", createFile("b"))
         store.move("a/c/c", createFile("c"))
-        createFile("lock", "fs/a/b/b.fslck")
+        store.marker.startWrite("a/b/b")
         def search = store.search("**/*")
         then:
         search.size() == 2
@@ -219,5 +219,39 @@ class DefaultPathKeyFileStoreTest extends Specification {
 
     def createFile(String content, String path = "f${pathCounter++}") {
         dir.createFile(path) << content
+    }
+
+    def "marker file"() {
+        def marker
+
+        when:
+        marker = new DefaultPathKeyFileStore.Marker(fsBase.file('fslock'))
+
+        then:
+        marker.writtenFile == null
+
+        when:
+        marker.startWrite("foo")
+
+        then:
+        marker.writtenFile == 'foo'
+
+        when:
+        marker.endWrite()
+
+        then:
+        marker.writtenFile == null
+
+        when:
+        marker.startWrite("/foo/bar/baz")
+
+        then:
+        marker.writtenFile == '/foo/bar/baz'
+
+        when:
+        marker.endWrite()
+
+        then:
+        marker.writtenFile == null
     }
 }

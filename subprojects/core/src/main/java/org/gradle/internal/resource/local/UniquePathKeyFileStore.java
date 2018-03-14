@@ -44,9 +44,9 @@ public class UniquePathKeyFileStore extends DefaultPathKeyFileStore {
     }
 
     @Override
-    protected void doAdd(File destination, Action<File> action) {
+    protected void doAdd(String path, File destination, Action<File> action) {
         if (!destination.exists()) {
-            super.doAdd(destination, action);
+            super.doAdd(path, destination, action);
         }
     }
 }

@@ -16,6 +16,7 @@
 
 package org.gradle.internal.resource.local;
 
+import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.Action;
 import org.gradle.api.NonNullApi;
@@ -27,12 +28,15 @@ import org.gradle.internal.UncheckedException;
 import org.gradle.util.GFileUtils;
 import org.gradle.util.RelativePathUtil;
 
+import javax.annotation.Nullable;
 import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
-import static org.gradle.internal.FileUtils.hasExtension;
 
 /**
  * File store that accepts the target path as the key for the entry.
@@ -55,12 +59,18 @@ public class DefaultPathKeyFileStore implements PathKeyFileStore {
         then removed after the write. This is used to detect partially written files (due to a serious crash)
         and to silently clean them.
      */
-    public static final String IN_PROGRESS_MARKER_FILE_SUFFIX = ".fslck";
+    private static final String IN_PROGRESS_MARKER_FILE = ".fslck";
 
-    private File baseDir;
+    final Marker marker;
+    private final File baseDir;
 
     public DefaultPathKeyFileStore(File baseDir) {
         this.baseDir = baseDir;
+        try {
+            this.marker = new Marker(new File(baseDir, IN_PROGRESS_MARKER_FILE));
+        } catch (IOException e) {
+            throw UncheckedException.throwAsUncheckedException(e);
+        }
     }
 
     protected File getBaseDir() {
@@ -73,9 +83,8 @@ public class DefaultPathKeyFileStore implements PathKeyFileStore {
 
     private File getFileWhileCleaningInProgress(String path) {
         File file = getFile(path);
-        File markerFile = getInProgressMarkerFile(file);
-        if (markerFile.exists()) {
-            deleteFileQuietly(file);
+        File markerFile = getInProgressMarkerFile();
+        if (markerFile != null) {
             deleteFileQuietly(markerFile);
         }
         return file;
@@ -124,14 +133,13 @@ public class DefaultPathKeyFileStore implements PathKeyFileStore {
 
     private LocallyAvailableResource doAdd(String path, Action<File> action) {
         File destination = getFile(path);
-        doAdd(destination, action);
+        doAdd(path, destination, action);
         return entryAt(path);
     }
 
-    protected void doAdd(File destination, Action<File> action) {
+    protected void doAdd(String path, File destination, Action<File> action) {
         GFileUtils.parentMkdirs(destination);
-        File inProgressMarkerFile = getInProgressMarkerFile(destination);
-        GFileUtils.touch(inProgressMarkerFile);
+        marker.startWrite(path);
         try {
             FileUtils.deleteQuietly(destination);
             action.execute(destination);
@@ -139,7 +147,7 @@ public class DefaultPathKeyFileStore implements PathKeyFileStore {
             FileUtils.deleteQuietly(destination);
             throw UncheckedException.throwAsUncheckedException(t);
         } finally {
-            deleteFileQuietly(inProgressMarkerFile);
+            marker.endWrite();
         }
     }
 
@@ -150,13 +158,16 @@ public class DefaultPathKeyFileStore implements PathKeyFileStore {
         }
 
         final Set<LocallyAvailableResource> entries = new HashSet<LocallyAvailableResource>();
+        final File markerFile = getInProgressMarkerFile();
         findFiles(pattern).visit(new EmptyFileVisitor() {
             public void visitFile(FileVisitDetails fileDetails) {
                 final File file = fileDetails.getFile();
-                // We cannot clean in progress markers, or in progress files here because
-                // the file system visitor stuff can't handle the file system mutating while visiting
-                if (!isInProgressMarkerFile(file) && !isInProgressFile(file)) {
-                    entries.add(entryAt(file));
+                if (!file.getName().equals(IN_PROGRESS_MARKER_FILE)) {
+                    // We cannot clean in progress markers, or in progress files here because
+                    // the file system visitor stuff can't handle the file system mutating while visiting
+                    if (markerFile == null || !file.equals(markerFile)) {
+                        entries.add(entryAt(file));
+                    }
                 }
             }
         });
@@ -164,16 +175,13 @@ public class DefaultPathKeyFileStore implements PathKeyFileStore {
         return entries;
     }
 
-    private File getInProgressMarkerFile(File file) {
-        return new File(file.getParent(), file.getName() + IN_PROGRESS_MARKER_FILE_SUFFIX);
-    }
-
-    private boolean isInProgressMarkerFile(File file) {
-        return hasExtension(file, IN_PROGRESS_MARKER_FILE_SUFFIX);
-    }
-
-    private boolean isInProgressFile(File file) {
-        return getInProgressMarkerFile(file).exists();
+    @Nullable
+    private File getInProgressMarkerFile() {
+        String writtenFile = marker.getWrittenFile();
+        if (writtenFile != null) {
+            return new File(baseDir, writtenFile);
+        }
+        return null;
     }
 
     private MinimalFileTree findFiles(String pattern) {
@@ -192,7 +200,7 @@ public class DefaultPathKeyFileStore implements PathKeyFileStore {
     public LocallyAvailableResource get(String key) {
         final File file = getFileWhileCleaningInProgress(key);
         if (file.exists()) {
-            return new DefaultLocallyAvailableResource(getFile(key));
+            return new DefaultLocallyAvailableResource(file);
         } else {
             return null;
         }
@@ -201,5 +209,52 @@ public class DefaultPathKeyFileStore implements PathKeyFileStore {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private static void deleteFileQuietly(File file) {
         file.delete();
+    }
+
+    static class Marker {
+        private static final int MAX_LENGTH = 4096;
+        private final MappedByteBuffer buffer;
+
+        private Marker(File markerFile) throws IOException {
+            if (!markerFile.exists() && markerFile.getParentFile().mkdirs()) {
+                Files.write(new byte[MAX_LENGTH], markerFile);
+            }
+            buffer = Files.map(markerFile, FileChannel.MapMode.READ_WRITE, MAX_LENGTH);
+        }
+
+        public void startWrite(String path) {
+            try {
+                byte[] arr = path.getBytes("UTF-8");
+                if (arr.length + 4 > MAX_LENGTH) {
+                    throw new UnsupportedOperationException("Path too long: " + path);
+                }
+                buffer.clear();
+                buffer.putInt(arr.length);
+                buffer.put(arr);
+                buffer.force();
+            } catch (UnsupportedEncodingException e) {
+                throw UncheckedException.throwAsUncheckedException(e);
+            }
+        }
+
+        public void endWrite() {
+            buffer.putInt(0, 0);
+        }
+
+        @Nullable
+        public String getWrittenFile() {
+            buffer.clear();
+            int len = buffer.getInt();
+            if (len == 0) {
+                return null;
+            }
+            byte[] tmp = new byte[len];
+            buffer.get(tmp);
+            try {
+                return new String(tmp, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                throw UncheckedException.throwAsUncheckedException(e);
+            }
+        }
     }
 }
