@@ -53,7 +53,8 @@ public class DefaultSourceIncludesResolver implements SourceIncludesResolver {
     @Override
     public IncludeResolutionResult resolveInclude(final File sourceFile, Include include, MacroLookup visibleMacros) {
         BuildableResult results = new BuildableResult();
-        resolveExpression(visibleMacros, include, new PathResolvingVisitor(sourceFile, results), new TokenLookup());
+        ExpressionVisitor expressionVisitor = new ShortCircuiting(new PathResolvingVisitor(sourceFile, results));
+        resolveExpression(visibleMacros, include, expressionVisitor, new TokenLookup());
         return results;
     }
 
@@ -376,6 +377,49 @@ public class DefaultSourceIncludesResolver implements SourceIncludesResolver {
         @Override
         public Set<IncludeFile> getFiles() {
             return files;
+        }
+    }
+
+    private static class ShortCircuiting implements ExpressionVisitor {
+        private final ExpressionVisitor delegate;
+        private boolean unresolved;
+
+        private ShortCircuiting(ExpressionVisitor delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public boolean startVisit(Expression expression) {
+            if (unresolved) {
+                return false;
+            }
+            return delegate.startVisit(expression);
+        }
+
+        @Override
+        public void visitQuoted(Expression value) {
+            delegate.visitQuoted(value);
+        }
+
+        @Override
+        public void visitSystem(Expression value) {
+            delegate.visitSystem(value);
+        }
+
+        @Override
+        public void visitIdentifier(Expression value) {
+            delegate.visitIdentifier(value);
+        }
+
+        @Override
+        public void visitTokens(Expression tokens) {
+            delegate.visitTokens(tokens);
+        }
+
+        @Override
+        public void visitUnresolved() {
+            unresolved = true;
+            delegate.visitUnresolved();
         }
     }
 
