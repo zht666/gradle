@@ -17,9 +17,11 @@ package org.gradle.language.nativeplatform.internal.incremental;
 
 import org.gradle.api.internal.changedetection.state.FileSnapshot;
 import org.gradle.language.nativeplatform.internal.Include;
+import org.gradle.language.nativeplatform.internal.Macro;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 
 public interface SourceIncludesResolver {
     interface IncludeResolutionResult {
@@ -31,6 +33,8 @@ public interface SourceIncludesResolver {
         boolean isComplete();
 
         Collection<IncludeFile> getFiles();
+
+        List<Macro> getUsedMacros();
     }
 
     interface IncludeFile {

@@ -17,31 +17,36 @@
 package org.gradle.language.nativeplatform.internal.incremental;
 
 import org.gradle.language.nativeplatform.internal.Include;
+import org.gradle.language.nativeplatform.internal.Macro;
 import org.testng.collections.Maps;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 public class CachingSourceIncludesResolver implements SourceIncludesResolver {
     private final SourceIncludesResolver delegate;
     private final Map<Include, IncludeResolutionResult> cache = Maps.newHashMap();
 
-    public CachingSourceIncludesResolver(SourceIncludesResolver delegate) {
+    CachingSourceIncludesResolver(SourceIncludesResolver delegate) {
         this.delegate = delegate;
     }
 
     @Override
     public IncludeResolutionResult resolveInclude(File sourceFile, Include include, MacroLookup visibleMacros) {
         IncludeResolutionResult result = cache.get(include);
-        if (!canReuseResult(result)) {
+        if (!canReuseResult(result, visibleMacros)) {
             result = delegate.resolveInclude(sourceFile, include, visibleMacros);
             cache.put(include, result);
         }
         return result;
     }
 
-    private boolean canReuseResult(IncludeResolutionResult result) {
-        // TODO: Wrong!
-        return result != null;
+    private boolean canReuseResult(IncludeResolutionResult result, MacroLookup visibleMacros) {
+        if (result == null) {
+            return false;
+        }
+        List<Macro> macros = result.getUsedMacros();
+        return visibleMacros.areMacrosTheSame(macros);
     }
 }

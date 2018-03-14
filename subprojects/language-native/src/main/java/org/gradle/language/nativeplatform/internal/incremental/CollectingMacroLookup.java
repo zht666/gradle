@@ -17,6 +17,7 @@
 package org.gradle.language.nativeplatform.internal.incremental;
 
 import org.gradle.language.nativeplatform.internal.IncludeDirectives;
+import org.gradle.language.nativeplatform.internal.Macro;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -76,6 +77,11 @@ public class CollectingMacroLookup implements MacroLookup {
             MacroSource source = uncollected.remove(0);
             source.collectInto(this);
         }
+    }
+
+    @Override
+    public boolean areMacrosTheSame(List<Macro> macros) {
+        return true;
     }
 
     interface MacroSource {

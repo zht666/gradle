@@ -16,6 +16,7 @@
 package org.gradle.language.nativeplatform.internal.incremental;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Sets;
 import org.gradle.api.internal.changedetection.state.FileSnapshot;
 import org.gradle.api.internal.changedetection.state.FileSystemSnapshotter;
 import org.gradle.internal.file.FileType;
@@ -27,6 +28,7 @@ import org.gradle.language.nativeplatform.internal.Macro;
 import org.gradle.language.nativeplatform.internal.MacroFunction;
 import org.gradle.language.nativeplatform.internal.incremental.sourceparser.ComplexExpression;
 import org.gradle.language.nativeplatform.internal.incremental.sourceparser.SimpleExpression;
+import org.testng.collections.Lists;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -34,7 +36,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -358,7 +359,8 @@ public class DefaultSourceIncludesResolver implements SourceIncludesResolver {
     }
 
     private static class BuildableResult implements IncludeResolutionResult {
-        private final Set<IncludeFile> files = new LinkedHashSet<IncludeFile>();
+        private final Set<IncludeFile> files = Sets.newLinkedHashSet();
+        private final List<Macro> macros = Lists.newArrayList();
         private boolean missing;
 
         void resolved(IncludeFile includeFile) {
@@ -377,6 +379,11 @@ public class DefaultSourceIncludesResolver implements SourceIncludesResolver {
         @Override
         public Set<IncludeFile> getFiles() {
             return files;
+        }
+
+        @Override
+        public List<Macro> getUsedMacros() {
+            return macros;
         }
     }
 

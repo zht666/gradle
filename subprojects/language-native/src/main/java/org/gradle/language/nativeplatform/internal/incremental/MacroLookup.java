@@ -17,6 +17,10 @@
 package org.gradle.language.nativeplatform.internal.incremental;
 
 import org.gradle.language.nativeplatform.internal.IncludeDirectives;
+import org.gradle.language.nativeplatform.internal.Macro;
+
+import java.util.List;
 
 public interface MacroLookup extends Iterable<IncludeDirectives> {
+    boolean areMacrosTheSame(List<Macro> macros);
 }
