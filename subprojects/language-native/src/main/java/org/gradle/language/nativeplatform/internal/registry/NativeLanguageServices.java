@@ -16,16 +16,39 @@
 
 package org.gradle.language.nativeplatform.internal.registry;
 
+import org.gradle.initialization.RootBuildLifecycleListener;
+import org.gradle.internal.event.ListenerManager;
 import org.gradle.internal.service.ServiceRegistration;
 import org.gradle.internal.service.scopes.AbstractPluginServiceRegistry;
 import org.gradle.language.cpp.internal.NativeDependencyCache;
 import org.gradle.language.internal.DefaultNativeComponentFactory;
 import org.gradle.language.nativeplatform.internal.incremental.DefaultCompilationStateCacheFactory;
 import org.gradle.language.nativeplatform.internal.incremental.DefaultIncrementalCompilerBuilder;
+import org.gradle.language.nativeplatform.internal.incremental.IncrementalCompileFilesFactory;
 import org.gradle.language.nativeplatform.internal.incremental.sourceparser.CachingCSourceParser;
 import org.gradle.language.nativeplatform.internal.toolchains.DefaultToolChainSelector;
 
 public class NativeLanguageServices extends AbstractPluginServiceRegistry {
+    @Override
+    public void registerGlobalServices(ServiceRegistration registration) {
+        registration.add(Dump.class);
+    }
+
+    public static class Dump implements RootBuildLifecycleListener {
+        public Dump(ListenerManager listenerManager) {
+            listenerManager.addListener(this);
+        }
+
+        @Override
+        public void afterStart() {
+        }
+
+        @Override
+        public void beforeComplete() {
+            IncrementalCompileFilesFactory.dump();
+        }
+    }
+
     @Override
     public void registerGradleServices(ServiceRegistration registration) {
         registration.add(DefaultCompilationStateCacheFactory.class);

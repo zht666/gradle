@@ -24,6 +24,7 @@ import org.gradle.cache.PersistentCache;
 import org.gradle.cache.PersistentIndexedCache;
 import org.gradle.cache.PersistentIndexedCacheParameters;
 import org.gradle.cache.PersistentStateCache;
+import org.gradle.language.nativeplatform.internal.registry.NativeLanguageServices;
 
 import java.io.Closeable;
 
@@ -34,7 +35,7 @@ public class DefaultCompilationStateCacheFactory implements CompilationStateCach
     private final PersistentIndexedCache<String, CompilationState> compilationStateIndexedCache;
     private final PersistentCache cache;
 
-    public DefaultCompilationStateCacheFactory(CacheRepository cacheRepository, Gradle gradle, InMemoryCacheDecoratorFactory inMemoryCacheDecoratorFactory) {
+    public DefaultCompilationStateCacheFactory(CacheRepository cacheRepository, Gradle gradle, InMemoryCacheDecoratorFactory inMemoryCacheDecoratorFactory, NativeLanguageServices.Dump dump) {
         cache = cacheRepository
                 .cache(gradle, "nativeCompile")
                 .withDisplayName("native compile cache")

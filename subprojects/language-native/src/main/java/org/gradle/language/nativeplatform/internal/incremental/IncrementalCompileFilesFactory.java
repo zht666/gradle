@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LongSummaryStatistics;
 import java.util.Map;
 import java.util.Set;
 
@@ -57,6 +58,73 @@ public class IncrementalCompileFilesFactory {
 
     public IncementalCompileSourceProcessor filesFor(CompilationState previousCompileState) {
         return new DefaultIncementalCompileSourceProcessor(previousCompileState);
+    }
+
+    static class FileVisitStats {
+        int visitCount;
+        int reuseCount;
+        int dependencyGraphSize;
+    }
+
+    static final Set<File> allSourceFiles = new HashSet<File>();
+    static final Map<File, FileVisitStats> visitStats = new HashMap<File, FileVisitStats>();
+
+    private static synchronized void reusedResult(File file) {
+        visitStats.get(file).reuseCount++;
+    }
+
+    private static synchronized void onFileVisit(File file) {
+        if (!visitStats.containsKey(file)) {
+            visitStats.put(file, new FileVisitStats());
+        }
+        visitStats.get(file).visitCount++;
+    }
+
+    private static synchronized void onSourceFile(File sourceFile, int dependencies) {
+        allSourceFiles.add(sourceFile);
+        visitStats.get(sourceFile).dependencyGraphSize = dependencies;
+    }
+
+    public static synchronized void dump() {
+        System.out.println();
+        System.out.println("COMPILE STATS - ALL TASKS");
+
+        LongSummaryStatistics sourceGraphSizeSummary = new LongSummaryStatistics();
+        for (File sourceFile : allSourceFiles) {
+            sourceGraphSizeSummary.accept(visitStats.get(sourceFile).dependencyGraphSize);
+        }
+
+        System.out.println();
+        System.out.println("Source files: " + sourceGraphSizeSummary.getCount());
+        System.out.println("Includes per file (avg): " + sourceGraphSizeSummary.getAverage());
+        System.out.println("Includes per file (min): " + sourceGraphSizeSummary.getMin());
+        System.out.println("Includes per file (max): " + sourceGraphSizeSummary.getMax());
+
+        LongSummaryStatistics visitSummary = new LongSummaryStatistics();
+        LongSummaryStatistics reuseDiffSummary = new LongSummaryStatistics();
+        for (Map.Entry<File, FileVisitStats> entry : visitStats.entrySet()) {
+            if (allSourceFiles.contains(entry.getKey())) {
+                continue;
+            }
+            FileVisitStats stats = entry.getValue();
+            visitSummary.accept(stats.visitCount);
+            reuseDiffSummary.accept(stats.visitCount - stats.reuseCount);
+        }
+
+        System.out.println();
+        System.out.println("Include files: " + visitSummary.getCount());
+        System.out.println("Total include file visits: " + visitSummary.getSum());
+        System.out.println("Visits per file (avg): " + visitSummary.getAverage());
+        System.out.println("Visits per file (min): " + visitSummary.getMin());
+        System.out.println("Visits per file (max): " + visitSummary.getMax());
+        System.out.println("No reuse visits per file (avg): " + reuseDiffSummary.getAverage());
+        System.out.println("No reuse visits per file (min): " + reuseDiffSummary.getMin());
+        System.out.println("No reuse visits per file (max): " + reuseDiffSummary.getMax());
+
+        System.out.println();
+
+        allSourceFiles.clear();
+        visitStats.clear();
     }
 
     private class DefaultIncementalCompileSourceProcessor implements IncementalCompileSourceProcessor {
@@ -100,6 +168,7 @@ public class IncrementalCompileFilesFactory {
             FileVisitResult result = visitFile(sourceFile, fileSnapshot, visibleMacros, new HashSet<File>(), true);
             ArrayList<IncludeFileState> includedFiles = new ArrayList<IncludeFileState>();
             result.collectFilesInto(++traversalCount, includedFiles);
+            onSourceFile(sourceFile, includedFiles.size());
             SourceFileState newState = new SourceFileState(fileSnapshot.getContent().getContentMd5(), ImmutableSet.copyOf(includedFiles));
             current.setState(sourceFile, newState);
             includeDirectivesMap.put(sourceFile, result.includeDirectives);
@@ -111,8 +180,11 @@ public class IncrementalCompileFilesFactory {
         }
 
         private FileVisitResult visitFile(File file, FileSnapshot fileSnapshot, CollectingMacroLookup visibleMacros, Set<File> visited, boolean isSourceFile) {
+            onFileVisit(file);
+
             FileDetails fileDetails = visitedFiles.get(file);
             if (fileDetails != null && fileDetails.results != null) {
+                reusedResult(file);
                 // A file that we can safely reuse the result for
                 visibleMacros.append(fileDetails.results);
                 return fileDetails.results;
