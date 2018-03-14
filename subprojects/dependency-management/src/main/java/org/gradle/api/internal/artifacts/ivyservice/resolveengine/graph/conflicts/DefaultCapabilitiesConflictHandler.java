@@ -43,7 +43,7 @@ public class DefaultCapabilitiesConflictHandler implements CapabilitiesConflictH
     private final Deque<CapabilityConflict> conflicts = new ArrayDeque<CapabilityConflict>();
 
     @Override
-    public PotentialConflict registerModule(CapabilitiesConflictHandler.Candidate newModule) {
+    public PotentialConflict registerCandidate(CapabilitiesConflictHandler.Candidate newModule) {
         CapabilityInternal capability = (CapabilityInternal) newModule.getCapability();
         String group = capability.getGroup();
         String name = capability.getName();
