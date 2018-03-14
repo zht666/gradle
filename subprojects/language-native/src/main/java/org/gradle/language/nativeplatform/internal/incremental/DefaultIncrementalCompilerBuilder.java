@@ -99,7 +99,8 @@ public class DefaultIncrementalCompilerBuilder implements IncrementalCompilerBui
             List<File> includeRoots = ImmutableList.copyOf(includeDirs);
             compileStateCache = compilationStateCacheFactory.create(taskPath);
             DefaultSourceIncludesParser sourceIncludesParser = new DefaultSourceIncludesParser(sourceParser, importAware.get());
-            DefaultSourceIncludesResolver dependencyParser = new DefaultSourceIncludesResolver(includeRoots, fileSystemSnapshotter);
+            // TODO: Move caching to a service?
+            SourceIncludesResolver dependencyParser = new CachingSourceIncludesResolver(new DefaultSourceIncludesResolver(includeRoots, fileSystemSnapshotter));
             IncrementalCompileFilesFactory incrementalCompileFilesFactory = new IncrementalCompileFilesFactory(sourceIncludesParser, dependencyParser, fileSystemSnapshotter);
             IncrementalCompileProcessor incrementalCompileProcessor = new IncrementalCompileProcessor(compileStateCache, incrementalCompileFilesFactory, buildOperationExecutor);
 
