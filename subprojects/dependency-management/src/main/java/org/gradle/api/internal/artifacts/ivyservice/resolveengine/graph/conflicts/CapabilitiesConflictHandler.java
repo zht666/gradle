@@ -25,6 +25,7 @@ public interface CapabilitiesConflictHandler extends ConflictHandler<Capabilitie
     interface Candidate {
         ComponentState getComponent();
         Capability getCapability();
+        Collection<ComponentState> getImplicitCapabilityProviders();
     }
 
     interface ResolutionDetails extends ConflictResolutionResult {

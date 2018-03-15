@@ -361,9 +361,6 @@ public class ComponentState implements ComponentResolutionState, DependencyGraph
 
 
     public void forEachCapability(Action<? super Capability> action) {
-        // first, implicitly add a capability corresponding to the module
-        action.execute(implicitCapability);
-
         // check conflict for each target node
         for (NodeState target : nodes) {
             List<? extends Capability> capabilities = target.getMetadata().getCapabilities().getCapabilities();
