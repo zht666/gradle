@@ -423,4 +423,51 @@ class TestCapability implements Capability {
             noMoreDependencies()
         }
     }
+
+    def "can publish a platform"() {
+        settingsFile << "rootProject.name = 'myplatform'"
+        buildFile << """
+            apply plugin: 'maven-publish'
+            apply plugin: 'platform'
+
+            group = 'group'
+            version = '1.0'
+
+            dependencies {
+                constraints {
+                    platform 'org:foo:1.0'
+                }
+
+                platform 'org:bar:1.0'
+            }
+
+            configurations.platform.outgoing.capability('org.test:test:1')
+
+            publishing {
+                repositories {
+                    maven { url "${mavenRepo.uri}" }
+                }
+                publications {
+                    maven(MavenPublication) {
+                        from components.platform
+                    }
+                }
+            }
+        """
+
+        when:
+        succeeds 'publish'
+
+        then:
+        def module = mavenRepo.module('group', 'myplatform', '1.0')
+        module.assertPublished()
+        module.parsedModuleMetadata.variant('default') {
+            constraint('org:foo:1.0').exists()
+            dependency('org:bar:1.0').exists()
+            noMoreDependencies()
+
+            capability('org.test', 'test', '1')
+            noMoreCapabilities()
+        }
+    }
 }
