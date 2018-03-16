@@ -522,4 +522,51 @@ class DependencyConstraintsIntegrationTest extends AbstractIntegrationSpec {
             }
         }
     }
+
+    void "can consume dependency constraint from local platform"() {
+        settingsFile << '''
+            include "myplatform"
+        '''
+
+        mavenRepo.module("org", "foo", "1.0").publish()
+        mavenRepo.module("org", "bar", "1.0").publish()
+        mavenRepo.module("org", "bar", "1.1").publish()
+
+        given:
+        file("myplatform/build.gradle") << '''
+            apply plugin: 'platform'
+
+            dependencies {
+                constraints {
+                    platform 'org:foo:1.0'
+                    platform 'org:bar:1.1'
+                }
+
+                platform 'org:bar'
+            }
+        '''
+
+        buildFile << '''
+            dependencies {
+                conf project(':myplatform')
+                conf 'org:foo'
+            }
+        '''
+
+        when:
+        run ':checkDeps'
+
+        then:
+        resolve.expectGraph {
+            root(":", ":test:") {
+                project(':myplatform', 'test:myplatform:') {
+                    edge('org:bar', 'org:bar:1.1')
+                    module('org:foo:1.0')
+                    module('org:bar:1.1')
+                    noArtifacts()
+                }
+                edge('org:foo', "org:foo:1.0")
+            }
+        }
+    }
 }

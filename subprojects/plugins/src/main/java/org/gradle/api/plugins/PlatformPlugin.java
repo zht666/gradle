@@ -47,6 +47,7 @@ public class PlatformPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
+        project.getPluginManager().apply(BasePlugin.class);
         Configuration platformConfiguration = createPlatformConfiguration(project);
         createComponent(project, platformConfiguration);
     }
@@ -59,6 +60,7 @@ public class PlatformPlugin implements Plugin<Project> {
         Configuration platform = project.getConfigurations().create(PLATFORM_CONFIGURATION_NAME);
         platform.setCanBeResolved(false);
         platform.setCanBeConsumed(true);
+        project.getConfigurations().getByName("default").extendsFrom(platform);
         return platform;
     }
 
