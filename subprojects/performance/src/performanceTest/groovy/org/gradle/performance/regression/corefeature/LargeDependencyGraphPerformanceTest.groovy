@@ -57,7 +57,7 @@ class LargeDependencyGraphPerformanceTest extends AbstractCrossVersionPerformanc
             runner.args += '--parallel'
         }
         if (improvedPomSupport) {
-            runner.args += '-Porg.gradle.advancedpomsupport=true -PimprovedPomSupport=true'
+            runner.args += '-PimprovedPomSupport=true'
         }
 
         when:
