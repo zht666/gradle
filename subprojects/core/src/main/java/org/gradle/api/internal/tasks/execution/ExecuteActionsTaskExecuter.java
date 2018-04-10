@@ -34,10 +34,10 @@ import org.gradle.internal.exceptions.Contextual;
 import org.gradle.internal.exceptions.DefaultMultiCauseException;
 import org.gradle.internal.exceptions.MultiCauseException;
 import org.gradle.internal.operations.BuildOperationContext;
-import org.gradle.internal.operations.BuildOperationExecutor;
-import org.gradle.internal.operations.RunnableBuildOperation;
 import org.gradle.internal.operations.BuildOperationDescriptor;
+import org.gradle.internal.operations.BuildOperationExecutor;
 import org.gradle.internal.operations.BuildOperationRef;
+import org.gradle.internal.operations.RunnableBuildOperation;
 import org.gradle.internal.scopeids.id.BuildInvocationScopeId;
 import org.gradle.internal.work.AsyncWorkTracker;
 
@@ -65,7 +65,7 @@ public class ExecuteActionsTaskExecuter implements TaskExecuter {
 
     public void execute(TaskInternal task, TaskStateInternal state, TaskExecutionContext context) {
         listener.beforeActions(task);
-        if (task.hasTaskActions()) {
+        if (task.hasTaskActions() && !(task.getClass().getSimpleName().endsWith("ArtifactTransformTask"))) {
             outputsGenerationListener.beforeTaskOutputChanged();
         }
         state.setExecuting(true);
