@@ -70,6 +70,24 @@ class MavenPublishArtifactCustomizationIntegTest extends AbstractMavenPublishInt
         }
     }
 
+    def "artifact coordinates are evaluated lazily"() {
+        given:
+        createBuildScripts("""
+            publications {
+                mavenCustom(MavenPublication) {
+                    artifact customJar
+                }
+            }
+""", "version = 2.0")
+        when:
+        succeeds 'publish'
+
+        then:
+        def module = mavenRepo.module("group", "projectText", "2.0")
+        module.assertPublished()
+        module.assertArtifactsPublished("projectText-2.0.pom", "projectText-2.0-customjar.jar")
+    }
+
     /**
      * Not enabled with module metadata.
      * @see org.gradle.api.publish.maven.internal.publication.DefaultMavenPublication#checkThatArtifactIsPublishedUnmodified
