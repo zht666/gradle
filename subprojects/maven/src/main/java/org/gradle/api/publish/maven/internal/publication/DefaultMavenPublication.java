@@ -112,6 +112,8 @@ public class DefaultMavenPublication implements MavenPublicationInternal {
     private SoftwareComponentInternal component;
     private boolean isPublishWithOriginalFileName;
     private boolean alias;
+    private boolean populated;
+    private boolean artifactsOverwritten;
 
     public DefaultMavenPublication(
         String name, MavenProjectIdentity projectIdentity, NotationParser<Object, MavenArtifact> mavenArtifactParser, Instantiator instantiator,
@@ -178,7 +180,17 @@ public class DefaultMavenPublication implements MavenPublicationInternal {
             throw new InvalidUserDataException(String.format("Maven publication '%s' cannot include multiple components", name));
         }
         this.component = (SoftwareComponentInternal) component;
+        artifactsOverwritten = false;
+    }
 
+    private void populateFromComponent() {
+        if (populated) {
+            return;
+        }
+        populated = true;
+        if (component == null) {
+            return;
+        }
         Set<ArtifactKey> seenArtifacts = Sets.newHashSet();
         Set<ModuleDependency> seenDependencies = Sets.newHashSet();
         Set<DependencyConstraint> seenConstraints = Sets.newHashSet();
@@ -186,7 +198,7 @@ public class DefaultMavenPublication implements MavenPublicationInternal {
             // TODO Need a smarter way to map usage to artifact classifier
             for (PublishArtifact publishArtifact : usageContext.getArtifacts()) {
                 ArtifactKey key = new ArtifactKey(publishArtifact.getFile(), publishArtifact.getClassifier(), publishArtifact.getExtension());
-                if (seenArtifacts.add(key)) {
+                if (!artifactsOverwritten && seenArtifacts.add(key)) {
                     artifact(publishArtifact);
                 }
             }
@@ -257,10 +269,12 @@ public class DefaultMavenPublication implements MavenPublicationInternal {
     }
 
     public MavenArtifactSet getArtifacts() {
+        populateFromComponent();
         return mavenArtifacts;
     }
 
     public void setArtifacts(Iterable<?> sources) {
+        artifactsOverwritten = true;
         mavenArtifacts.clear();
         for (Object source : sources) {
             artifact(source);
@@ -292,6 +306,7 @@ public class DefaultMavenPublication implements MavenPublicationInternal {
     }
 
     public FileCollection getPublishableFiles() {
+        populateFromComponent();
         if (moduleMetadataFile == null) {
             // possible if the gradle metadata feature is disabled
             return new UnionFileCollection(mavenArtifacts.getFiles(), pomFile);
@@ -305,23 +320,28 @@ public class DefaultMavenPublication implements MavenPublicationInternal {
 
     @Override
     public Set<MavenDependency> getApiDependencyConstraints() {
+        populateFromComponent();
         return apiDependencyConstraints;
     }
 
     @Override
     public Set<MavenDependency> getRuntimeDependencyConstraints() {
+        populateFromComponent();
         return runtimeDependencyConstraints;
     }
 
     public Set<MavenDependencyInternal> getRuntimeDependencies() {
+        populateFromComponent();
         return runtimeDependencies;
     }
 
     public Set<MavenDependencyInternal> getApiDependencies() {
+        populateFromComponent();
         return apiDependencies;
     }
 
     public MavenNormalizedPublication asNormalisedPublication() {
+        populateFromComponent();
         return new MavenNormalizedPublication(name, getPomFile(), getGradleMetadataFile(), projectIdentity, getArtifacts(), determineMainArtifact());
     }
 
@@ -341,6 +361,7 @@ public class DefaultMavenPublication implements MavenPublicationInternal {
     }
 
     public String determinePackagingFromArtifacts() {
+        populateFromComponent();
         Set<MavenArtifact> unclassifiedArtifacts = getUnclassifiedArtifactsWithExtension();
         if (unclassifiedArtifacts.size() == 1) {
             return unclassifiedArtifacts.iterator().next().getExtension();
@@ -415,6 +436,7 @@ public class DefaultMavenPublication implements MavenPublicationInternal {
 
     @Override
     public PublishedFile getPublishedFile(final PublishArtifact source) {
+        populateFromComponent();
         checkThatArtifactIsPublishedUnmodified(source);
         final String publishedUrl = getPublishedUrl(source);
         final String publishedName = isPublishWithOriginalFileName ? source.getFile().getName() : publishedUrl;
