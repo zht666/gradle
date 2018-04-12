@@ -390,6 +390,7 @@ public class ModuleMetadataFileGenerator {
         }
         if (dependency instanceof ModuleDependency) {
             writeExcludes((ModuleDependency) dependency, jsonWriter);
+            writeAttributes(((ModuleDependency)dependency).getAttributes(), jsonWriter);
         }
         String reason = dependency.getReason();
         if (StringUtils.isNotEmpty(reason)) {
@@ -418,6 +419,7 @@ public class ModuleMetadataFileGenerator {
         jsonWriter.name("module");
         jsonWriter.value(dependencyConstraint.getName());
         writeVersionConstraint(dependencyConstraint.getVersionConstraint(), jsonWriter);
+        writeAttributes(dependencyConstraint.getAttributes(), jsonWriter);
         String reason = dependencyConstraint.getReason();
         if (StringUtils.isNotEmpty(reason)) {
             jsonWriter.name("reason");
