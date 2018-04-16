@@ -84,5 +84,4 @@ public interface DependencyMetadata {
      */
     DependencyMetadata withReason(String reason);
 
-    ImmutableAttributes getAttributes();
 }
