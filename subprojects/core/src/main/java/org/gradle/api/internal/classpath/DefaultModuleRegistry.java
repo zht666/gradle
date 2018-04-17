@@ -73,6 +73,15 @@ public class DefaultModuleRegistry implements ModuleRegistry {
     }
 
     public Module getExternalModule(String name) {
+        Module module = modules.get(name);
+        if (module == null) {
+            module = loadExternalModule(name);
+            modules.put(name, module);
+        }
+        return module;
+    }
+
+    private Module loadExternalModule(String name) {
         File externalJar = findJar(name);
         if (externalJar == null) {
             throw new UnknownModuleException(String.format("Cannot locate JAR for module '%s' in distribution directory '%s'.", name, gradleInstallation.getGradleHome()));
